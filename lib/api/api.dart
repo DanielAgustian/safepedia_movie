@@ -18,14 +18,14 @@ class API {
           });
       ListMovieClass cal = ListMovieClass.fromJson(response.data);
 
-      // print(response.data);
+      print(response.data);
 
       return cal;
     } on DioError catch (e) {
       if (kDebugMode) {
         print('Error:$e');
       }
-
+  
       // ignore: newline-before-return
       return null;
     }

@@ -72,7 +72,8 @@ class Results {
   String? releaseDate;
   String? title;
   bool? video;
-  double? voteAverage;
+  // ignore: prefer_typing_uninitialized_variables
+  var voteAverage;
   int? voteCount;
 
   Results(
