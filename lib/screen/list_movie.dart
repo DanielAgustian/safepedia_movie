@@ -9,6 +9,7 @@ import 'package:safepedia_movie/component/movie_box.dart';
 import 'package:safepedia_movie/constant/const.dart';
 import 'package:safepedia_movie/controller/list_movie_controller.dart';
 import 'package:safepedia_movie/models/list_movie_model.dart';
+import 'package:safepedia_movie/screen/detail_movie.dart';
 import 'package:safepedia_movie/screen/pengenalan_diri_screen.dart';
 
 class ListMovieScreen extends StatefulWidget {
@@ -215,11 +216,19 @@ class _ListMovieScreenState extends State<ListMovieScreen> {
                     Wrap(
                       children: [
                         ...listMovie.map((movie) => MovieBox(
-                            title: movie.title ?? '',
-                            grid: grid,
-                            overview: movie.overview ?? '',
-                            picture: movie.posterPath ?? '',
-                            rating: movie.voteAverage.toString())),
+                              title: movie.title ?? '',
+                              grid: grid,
+                              overview: movie.overview ?? '',
+                              picture: movie.posterPath ?? '',
+                              rating: movie.voteAverage.toString(),
+                              onClick: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            DetailMovie(id: movie.id ?? 0)));
+                              },
+                            )),
                       ],
                     ),
                     Obx(() => listMovieController.loading.value
