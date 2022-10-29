@@ -50,7 +50,7 @@ class _MySplashScreenState extends State<MySplashScreen> {
           children: [
             FaIcon(
               FontAwesomeIcons.film,
-              size: size.width > 500 ? 100 : 80,
+              size: size.width > 500 ? 120 : 80,
               color: secondaryYellow,
             ),
             SizedBox(

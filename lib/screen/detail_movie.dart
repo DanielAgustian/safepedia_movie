@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:safepedia_movie/component/empty_internet.dart';
 import 'package:safepedia_movie/component/misc_comp.dart';
 import 'package:safepedia_movie/constant/const.dart';
 import 'package:safepedia_movie/controller/movie_detail_controller.dart';
@@ -29,7 +31,7 @@ class DetailMovie extends StatefulWidget {
 class _DetailMovieState extends State<DetailMovie> {
   final MovieDetailController _movieDetailController =
       Get.put(MovieDetailController());
-
+  bool internet = true;
   DetailMovieClass? movie;
   @override
   void initState() {
@@ -42,6 +44,15 @@ class _DetailMovieState extends State<DetailMovie> {
         await _movieDetailController.movieDetail(widget.id);
     setState(() {
       movie = temp;
+    });
+    checkInternetConnection();
+  }
+
+  void checkInternetConnection() async {
+    bool result = await InternetConnectionChecker().hasConnection;
+
+    setState(() {
+      internet = result;
     });
   }
 
@@ -79,156 +90,165 @@ class _DetailMovieState extends State<DetailMovie> {
         child: SingleChildScrollView(
           child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.w),
-              child: Obx(
-                () => _movieDetailController.loading.value || movie == null
-                    ? SizedBox(
-                        width: size.width,
-                        height: size.height * 0.85,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                              color: primeRed,
-                              backgroundColor: primeRed.withOpacity(0.12)),
-                        ),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            height: 20.h,
-                          ),
-                          Center(
-                            child: SizedBox(
-                              width: 135.w,
-                              child: CachedNetworkImage(
-                                imageUrl:
-                                    imageString + (movie?.posterPath ?? ""),
-                                imageBuilder: (context, image) {
-                                  return AspectRatio(
-                                      aspectRatio: 2 / 3,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image(
-                                          image: image,
-                                          fit: BoxFit.fill,
+              child: !internet
+                  ? emptyInternet(size, () {
+                      initData();
+                    })
+                  : Obx(
+                      () => _movieDetailController.loading.value ||
+                              movie == null
+                          ? SizedBox(
+                              width: size.width,
+                              height: size.height * 0.85,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                    color: primeRed,
+                                    backgroundColor:
+                                        primeRed.withOpacity(0.12)),
+                              ),
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  height: 20.h,
+                                ),
+                                Center(
+                                  child: SizedBox(
+                                    width: 135.w,
+                                    child: CachedNetworkImage(
+                                      imageUrl: imageString +
+                                          (movie?.posterPath ?? ""),
+                                      imageBuilder: (context, image) {
+                                        return AspectRatio(
+                                            aspectRatio: 2 / 3,
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: Image(
+                                                image: image,
+                                                fit: BoxFit.fill,
+                                              ),
+                                            ));
+                                      },
+                                      placeholder: (context, url) => Center(
+                                        child: CircularProgressIndicator(
+                                          color: primeBlue,
+                                          backgroundColor:
+                                              primeBlue.withOpacity(0.1),
                                         ),
-                                      ));
-                                },
-                                placeholder: (context, url) => Center(
-                                  child: CircularProgressIndicator(
-                                    color: primeBlue,
-                                    backgroundColor: primeBlue.withOpacity(0.1),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          const AspectRatio(
+                                              aspectRatio: 2 / 3,
+                                              child: AspectRatio(
+                                                  aspectRatio: 2 / 3,
+                                                  child: Image(
+                                                    image: NetworkImage(
+                                                        'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png'),
+                                                    fit: BoxFit.fill,
+                                                  ))),
+                                    ),
                                   ),
                                 ),
-                                errorWidget: (context, url, error) =>
-                                    const AspectRatio(
-                                        aspectRatio: 2 / 3,
-                                        child: AspectRatio(
-                                            aspectRatio: 2 / 3,
-                                            child: Image(
-                                              image: NetworkImage(
-                                                  'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png'),
-                                              fit: BoxFit.fill,
-                                            ))),
-                              ),
+                                SizedBox(
+                                  height: 25.h,
+                                ),
+                                Text(
+                                  movie?.title ?? '',
+                                  textAlign: TextAlign.start,
+                                  style: TextStyle(
+                                      color: primeBlue,
+                                      fontSize: size.width > 1000 ? 38 : 22.sp,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                SizedBox(
+                                  height: 5.h,
+                                ),
+                                Text(
+                                  movie!.tagline ?? "",
+                                  textAlign: TextAlign.start,
+                                  style: TextStyle(
+                                      color: Colors.black45,
+                                      fontSize: size.width > 1000 ? 24 : 14.sp),
+                                ),
+                                SizedBox(
+                                  height: 15.h,
+                                ),
+                                Text(
+                                  'Rating',
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: size.width > 1000 ? 24 : 16.sp),
+                                ),
+                                SizedBox(
+                                  height: 5.h,
+                                ),
+                                Row(
+                                  children: [
+                                    FaIcon(
+                                      FontAwesomeIcons.solidStar,
+                                      color: Colors.yellow,
+                                      size: size.width > 1000 ? 30 : 18.sp,
+                                    ),
+                                    SizedBox(
+                                      width: 6.w,
+                                    ),
+                                    Flexible(
+                                        child: Text(
+                                      movie!.voteAverage.toString(),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize:
+                                              size.width > 1000 ? 30 : 18.sp,
+                                          color: Colors.yellow[700]),
+                                    ))
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 15.h,
+                                ),
+                                Text(
+                                  'Genres',
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: size.width > 1000 ? 24 : 16.sp),
+                                ),
+                                SizedBox(
+                                  height: 5.h,
+                                ),
+                                Wrap(
+                                  children: [
+                                    ...?movie?.genres!.map((ele) =>
+                                        GenreBox(title: ele.name ?? ''))
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 15.h,
+                                ),
+                                Text(
+                                  'Runtime',
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: size.width > 1000 ? 24 : 16.sp),
+                                ),
+                                SizedBox(
+                                  height: 5.h,
+                                ),
+                                Text(
+                                  '${movie!.runtime} menit',
+                                  style: TextStyle(
+                                      color: primeBlue,
+                                      fontSize: size.width > 1000 ? 24 : 16.sp,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                SizedBox(
+                                  height: 30.h,
+                                ),
+                                miscInfo(size)
+                              ],
                             ),
-                          ),
-                          SizedBox(
-                            height: 25.h,
-                          ),
-                          Text(
-                            movie?.title ?? '',
-                            textAlign: TextAlign.start,
-                            style: TextStyle(
-                                color: primeBlue,
-                                fontSize: size.width > 1000 ? 38 : 22.sp,
-                                fontWeight: FontWeight.w600),
-                          ),
-                          SizedBox(
-                            height: 5.h,
-                          ),
-                          Text(
-                            movie!.tagline ?? "",
-                            textAlign: TextAlign.start,
-                            style: TextStyle(
-                                color: Colors.black45,
-                                fontSize: size.width > 1000 ? 24 : 14.sp),
-                          ),
-                          SizedBox(
-                            height: 15.h,
-                          ),
-                          Text(
-                            'Rating',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: size.width > 1000 ? 24 : 16.sp),
-                          ),
-                          SizedBox(
-                            height: 5.h,
-                          ),
-                          Row(
-                            children: [
-                              FaIcon(
-                                FontAwesomeIcons.solidStar,
-                                color: Colors.yellow,
-                                size: size.width > 1000 ? 30 : 18.sp,
-                              ),
-                              SizedBox(
-                                width: 6.w,
-                              ),
-                              Flexible(
-                                  child: Text(
-                                movie!.voteAverage.toString(),
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: size.width > 1000 ? 30 : 18.sp,
-                                    color: Colors.yellow[700]),
-                              ))
-                            ],
-                          ),
-                          SizedBox(
-                            height: 15.h,
-                          ),
-                          Text(
-                            'Genres',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: size.width > 1000 ? 24 : 16.sp),
-                          ),
-                          SizedBox(
-                            height: 5.h,
-                          ),
-                          Wrap(
-                            children: [
-                              ...?movie?.genres!
-                                  .map((ele) => GenreBox(title: ele.name ?? ''))
-                            ],
-                          ),
-                          SizedBox(
-                            height: 15.h,
-                          ),
-                          Text(
-                            'Runtime',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: size.width > 1000 ? 24 : 16.sp),
-                          ),
-                          SizedBox(
-                            height: 5.h,
-                          ),
-                          Text(
-                            '${movie!.runtime} menit',
-                            style: TextStyle(
-                                color: primeBlue,
-                                fontSize: size.width > 1000 ? 24 : 16.sp,
-                                fontWeight: FontWeight.w600),
-                          ),
-                          SizedBox(
-                            height: 30.h,
-                          ),
-                          miscInfo(size)
-                        ],
-                      ),
-              )),
+                    )),
         ),
       ),
     );

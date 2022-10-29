@@ -1,9 +1,13 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:safepedia_movie/component/empty_internet.dart';
 
 import 'package:safepedia_movie/component/movie_box.dart';
 import 'package:safepedia_movie/constant/const.dart';
@@ -33,10 +37,12 @@ class _ListMovieScreenState extends State<ListMovieScreen> {
   int page = 1;
   List<Results> listMovie = [];
   bool grid = true;
+  bool internet = true;
   DateTime currentBackPressTime = DateTime.now();
   @override
   void initState() {
     initMovie();
+    checkInternetConnection();
     super.initState();
   }
 
@@ -59,6 +65,14 @@ class _ListMovieScreenState extends State<ListMovieScreen> {
     List<Results> res = await listMovieController.list(page) ?? [];
     setState(() {
       listMovie.addAll(res);
+    });
+  }
+
+  void checkInternetConnection() async {
+    bool result = await InternetConnectionChecker().hasConnection;
+
+    setState(() {
+      internet = result;
     });
   }
 
@@ -114,6 +128,7 @@ class _ListMovieScreenState extends State<ListMovieScreen> {
             child: RefreshIndicator(
               onRefresh: () async {
                 initMovie();
+                checkInternetConnection();
               },
               child: SingleChildScrollView(
                 child: Column(
@@ -213,24 +228,29 @@ class _ListMovieScreenState extends State<ListMovieScreen> {
                     SizedBox(
                       height: 10.h,
                     ),
-                    Wrap(
-                      children: [
-                        ...listMovie.map((movie) => MovieBox(
-                              title: movie.title ?? '',
-                              grid: grid,
-                              overview: movie.overview ?? '',
-                              picture: movie.posterPath ?? '',
-                              rating: movie.voteAverage.toString(),
-                              onClick: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            DetailMovie(id: movie.id ?? 0)));
-                              },
-                            )),
-                      ],
-                    ),
+                    internet
+                        ? Wrap(
+                            children: [
+                              ...listMovie.map((movie) => MovieBox(
+                                    title: movie.title ?? '',
+                                    grid: grid,
+                                    overview: movie.overview ?? '',
+                                    picture: movie.posterPath ?? '',
+                                    rating: movie.voteAverage.toString(),
+                                    onClick: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) => DetailMovie(
+                                                  id: movie.id ?? 0)));
+                                    },
+                                  )),
+                            ],
+                          )
+                        : emptyInternet(size, () {
+                            initMovie();
+                            checkInternetConnection();
+                          }),
                     Obx(() => listMovieController.loading.value
                         ? Center(
                             child: CircularProgressIndicator(
@@ -242,27 +262,29 @@ class _ListMovieScreenState extends State<ListMovieScreen> {
                     SizedBox(
                       height: 20.h,
                     ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w),
-                      width: size.width,
-                      child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                              padding: EdgeInsets.symmetric(
-                                  vertical: 12.h, horizontal: 15.w),
-                              primary: primeBlue,
-                              onPrimary: colorBackground),
-                          onPressed: () {
-                            getMorePage();
-                          },
-                          child: Text(
-                            'Load More',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: size.width > 1000 ? 34 : 18.sp),
-                          )),
-                    ),
+                    internet
+                        ? Container(
+                            padding: EdgeInsets.symmetric(horizontal: 10.w),
+                            width: size.width,
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)),
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 12.h, horizontal: 15.w),
+                                    primary: primeBlue,
+                                    onPrimary: colorBackground),
+                                onPressed: () {
+                                  getMorePage();
+                                },
+                                child: Text(
+                                  'Load More',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: size.width > 1000 ? 34 : 18.sp),
+                                )),
+                          )
+                        : SizedBox(),
                     SizedBox(
                       height: 15.h,
                     )
